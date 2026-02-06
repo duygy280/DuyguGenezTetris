@@ -24,5 +24,7 @@ public class UIController : MonoBehaviour
     public void PlayAgain()
     {
         tetrisManager.SetGameOver(false);
+        // to restart the game
+        FindFirstObjectByType<Board>().UpdateGameOver();
     }
 }
