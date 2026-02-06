@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: Magenta
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: e096c903266420848b607e107aeb6e63, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 03b0b2a1bea688444ac959fbf12333dd, type: 3}
   m_Color: {r: 0.60247165, g: 0.0627451, b: 0.84313726, a: 1}
   m_Transform:
     e00: 1

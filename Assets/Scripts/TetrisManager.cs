@@ -7,27 +7,72 @@ public class TetrisManager : MonoBehaviour
 {
     public int score { get; private set; }
 
+    public bool gameOver { get; private set; }
+
     public UnityEvent OnScoreChanged;
-    private void Start()
+    public UnityEvent OnGameOver;
+
+    void Start()
     {
-        score = 0;
+        SetGameOver(false);
     }
 
-    public int CalculateScore(int linesCleared)
+  
+    public int CalculateScore(int clearedRows, Tetronimo pieceType)
     {
-        switch (linesCleared)
+        int baseScore = 0;
+
+        switch (clearedRows)
         {
-            case 0: return 100;
-            case 1: return 300;
-            case 2: return 500;
-            case 3: return 800;
-            default: return 0;
+            case 0: baseScore = 100; break;  
+            case 1: baseScore = 300; break;
+            case 2: baseScore = 500; break;
+            case 3: baseScore = 800; break;
+            default: baseScore = 100; break;
         }
+
+
+        // F piece bonus
+        if (pieceType == Tetronimo.F)
+        {
+            baseScore += 300; // extra point
+        }
+
+        return baseScore;
     }
 
+    
+    public void ChangeScoreWithPiece(int clearedRows, Tetronimo pieceType)
+    {
+        int scoreToAdd = CalculateScore(clearedRows, pieceType);
+        ChangeScore(scoreToAdd);
+    }
+
+    
     public void ChangeScore(int amount)
     {
         score += amount;
-        OnScoreChanged.Invoke();
+        if (OnScoreChanged != null)
+        {
+            OnScoreChanged.Invoke();
+        }
+    }
+
+    
+    public void SetGameOver(bool _gameOver)
+    {
+        if (!_gameOver)
+        {
+            
+            score = 0;
+            ChangeScore(0);
+        }
+
+        gameOver = _gameOver;
+
+        if (OnGameOver != null)
+        {
+            OnGameOver.Invoke();
+        }
     }
 }

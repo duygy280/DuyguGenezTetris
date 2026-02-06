@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-
-public enum Tetronimo { I, O, T, J, L, S, Z }
+//my piece is F - it consists of a total of 6 blocks with 3 rows in descending order frome top to bottom
+public enum Tetronimo { I, O, T, J, L, S, Z, F }
 
 [Serializable]
 

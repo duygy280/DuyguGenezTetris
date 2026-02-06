@@ -11,14 +11,18 @@ public class Piece : MonoBehaviour
 
     public Vector2Int position;
 
-    bool freeze = false;
-   // bool finalizePiece = false;
+    public bool freeze = false;
+    // bool finalizePiece = false;
+
+    int activeCellCount = -1;
 
     public void Initialize(Board board, Tetronimo tetronimo)
     {
         this.board = board;
+        //this.data = data;
 
         //search for the tetronimo data and assign
+        //cells = new Vector2Int[data.cells.Length];
         for (int i = 0; i < board.tetronimos.Length; i++)
         {
             if (board.tetronimos[i].tetronimo == tetronimo)
@@ -33,11 +37,15 @@ public class Piece : MonoBehaviour
         for (int i = 0; i < data.cells.Length; i++) cells[i] = data.cells[i];
 
         // set the start position of the piece
-        position = board.startPosition; 
+        position = board.startPosition;
+
+        activeCellCount = cells.Length;
     }
+
 
     private void Update() //////////////////private?
     {
+        if (board.tetrisManager.gameOver) return;
         if (freeze) return;
         board.Clear(this);
 
@@ -92,18 +100,89 @@ public class Piece : MonoBehaviour
 
     void Rotate(int direction)
     {
-        Quaternion rotation = Quaternion.Euler(0, 0, 90.0F * direction);
-        for (int i = 0;i < cells.Length; i++)
+        Vector2Int[] temporaryCells = new Vector2Int[cells.Length];
+        
+        for (int i = 0; i < cells.Length; i++) temporaryCells[i] = cells[i];
+
+        ApplyRotation(direction);
+
+        
+        if(!board.IsPositionValid(this, position))
         {
-            Vector2Int cellPosition = cells[i];
+            if (!TryWallKicks())
+            {
+                RevertRotation(temporaryCells);
+            }
+            else
+            {
+                Debug.Log("Wall kick succeeded");
+            }
+        }
+        else
+        {
+            Debug.Log("Valid rotation");
+        }
+        
+    }
 
-            Vector3 cellPositionV3 = new Vector3(cellPosition.x, cellPosition.y);
-            
-            Vector3 result = rotation * cellPositionV3;
+    bool TryWallKicks()
+    {
+        List<Vector2Int> wallKickOffsets = new List<Vector2Int>()
+        {
+            Vector2Int.left,
+            Vector2Int.right,
+            Vector2Int.down,
+            new Vector2Int(-1, -1),
+            new Vector2Int(1, -1),
+        };
 
-            cells[i] = new Vector2Int(
-                Mathf.RoundToInt(result.x),
-                Mathf.RoundToInt(result.y));
+        if (data.tetronimo == Tetronimo.I)
+        {
+            wallKickOffsets.Add(2 * Vector2Int.left);
+            wallKickOffsets.Add(2 * Vector2Int.right);
+        }
+
+        foreach (Vector2Int offset in wallKickOffsets)
+        {
+            if (Move(offset)) return true;
+        }
+
+        return false;
+    }
+
+    void RevertRotation(Vector2Int[] temporaryCells)
+    {
+        for (int i = 0; i < cells.Length;i++) cells[i] = temporaryCells[i]; 
+    }
+
+    void ApplyRotation(int direction)
+    {
+        Quaternion rotation = Quaternion.Euler(0, 0, 90 * direction);
+
+        bool isSpecial = data.tetronimo == Tetronimo.I || data.tetronimo == Tetronimo.O;
+        for (int i = 0; i < cells.Length; i++)
+            //F piece is not included in this 
+        {
+            Vector3 cellPosition = new Vector3(cells[i].x, cells[i].y);
+
+            if (isSpecial)
+            {
+                cellPosition.x -= 0.5f;
+                cellPosition.y -= 0.5f;
+            }
+
+            Vector3 results = rotation * cellPosition;
+
+            if (isSpecial)
+            {
+                cells[i].x = Mathf.CeilToInt(results.x);
+                cells[i].y = Mathf.CeilToInt(results.y);
+            }
+            else
+            {
+                cells[i].x = Mathf.RoundToInt(results.x);
+                cells[i].y = Mathf.RoundToInt(results.y);
+            }
         }
     }
 
@@ -112,22 +191,32 @@ public class Piece : MonoBehaviour
 
         while (Move(Vector2Int.down))
         {
-            freeze = true;
+           // freeze = true;
             //board.CheckBoard();
             //board.SpawnPiece();
         }
+        freeze = true;
     }
-        bool Move(Vector2Int translation)
+        public bool Move(Vector2Int translation)
         {
             Vector2Int newPosition = position;
             newPosition += translation;
 
-            bool isValid = board.IsPositionValid(this, newPosition);
-            if (isValid) position = newPosition;
+            bool positionValid = board.IsPositionValid(this, newPosition);
+            if (positionValid) position = newPosition;
 
-            return isValid;
+            return positionValid;
+        }
+        public void ReduceActiveCount()
+        {
+            activeCellCount -= 1;
+        Debug.Log($"Tetronimo {data.tetronimo} active cell count = {activeCellCount}");
+            if (activeCellCount <= 0)
+            {
+            Debug.Log($"Tetronimo {data.tetronimo} destroyed");
+            Destroy(gameObject);
+            }
         }
         
-        
-    }
+}
 
